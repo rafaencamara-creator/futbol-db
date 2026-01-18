@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Búsqueda</h2>
+
+<form method="POST" action="/" autocomplete="off">
+
+
+    <p>
+        <label>
+            <input type="checkbox" name="f_nacionalidad">
+            Nacionalidad
+        </label><br>
+        <input type="text" name="nacionalidad" id="nacionalidad">
+    </p>
+
+    <p>
+        <label>
+            <input type="checkbox" name="f_entrenador">
+            Entrenado por
+        </label><br>
+        <select name="entrenador" id="entrenador">
+    <option value="">-- Selecciona entrenador --</option>
+    {% for e in entrenadores %}
+        <option value="{{ e.nombre }}">{{ e.nombre }}</option>
+    {% endfor %}
+</select>
+
+    </p>
+
+    <p>
+        <label>
+            <input type="checkbox" name="f_club">
+            Jugó en club
+        </label><br>
+        <input type="text" name="club" id="club">
+    </p>
+
+    <p>
+        <label>
+            <input type="checkbox" name="f_liga">
+            Jugó en liga
+        </label><br>
+       <select name="liga" id="liga">
+    <option value="">-- Selecciona liga --</option>
+    {% for l in ligas %}
+        <option value="{{ l.liga }}">{{ l.liga }}</option>
+    {% endfor %}
+</select>
+
+    </p>
+
+    <p>
+        <label>
+            <input type="checkbox" name="f_companero">
+            Jugó con
+        </label><br>
+        <input type="text" name="companero" id="companero">
+    </p>
+
+<p>
+    <label>
+        <input type="checkbox" name="f_titulo">
+        Ganó título
+    </label><br>
+
+    <select name="titulo" id="titulo">
+        <option value="">-- Selecciona título --</option>
+        {% for t in titulos %}
+            <option value="{{ t.nombre }}">{{ t.nombre }}</option>
+        {% endfor %}
+    </select>
+</p>
+
+
+    <button type="submit">Buscar</button>
+</form>
+
+<hr>
+
+<h3>Resultados</h3>
+
+{% if resultados and resultados|length > 0 %}
+<ul>
+    {% for r in resultados %}
+        <li>{{ r.nombre }}</li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No hay resultados.</p>
+{% endif %}
+
+<!-- ========================= -->
+<!-- AUTOCOMPLETADO (ORDEN OK) -->
+<!-- ========================= -->
+
+<script src="{{ url_for('static', filename='autocomplete.js') }}"></script>
+
+<script>
+    setupAutocomplete("nacionalidad", "selecciones");
+    setupAutocomplete("club", "clubes");
+    setupAutocomplete("companero", "jugadores");
+    setupAutocomplete("entrenador", "entrenadores");
+    setupAutocomplete("titulo", "titulos");
+</script>
+
+{% endblock %}
+

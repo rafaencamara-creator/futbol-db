@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Historial de entrenador</h2>
+
+<form method="post">
+
+    <label>Entrenador:</label>
+    <input type="text" name="entrenador" required>
+
+    <br><br>
+
+    <label>Club:</label>
+    <input type="text" name="club" required>
+
+    <br><br>
+
+   <label>Fecha inicio:</label>
+<input type="date" name="inicio" required>
+
+<br><br>
+
+<label>Fecha fin:</label>
+<input type="date" name="fin" required>
+
+    <br><br>
+
+    <button>Guardar</button>
+
+</form>
+
+{% endblock %}
