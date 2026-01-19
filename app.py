@@ -1,5 +1,9 @@
 from flask import Flask, render_template, request, jsonify, redirect, session
 import sqlite3
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "database.db")
 
 app = Flask(__name__)
 
@@ -9,7 +13,7 @@ app.secret_key = "#Mickybite18Ngolonigger47pickcotton"
 # UTILIDAD DB
 # ===========================
 def query_db(query, params=()):
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     cur.execute(query, params)
@@ -37,7 +41,7 @@ def autocomplete(tipo):
     if tipo not in tablas:
         return jsonify([])
 
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     c.execute(
@@ -194,7 +198,7 @@ def add_data():
         nombre = request.form["nombre"]
         extra = request.form.get("extra")
 
-        conn = sqlite3.connect("database.db")
+        conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
 
         if tipo == "jugador":
@@ -272,7 +276,7 @@ def historial_entrenador():
         inicio = request.form["inicio"]
         fin = request.form["fin"]
 
-        conn = sqlite3.connect("database.db")
+        conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
 
         c.execute("SELECT id FROM entrenadores WHERE nombre = ?", (entrenador,))
@@ -304,7 +308,7 @@ def titulo_jugador():
         jugador = request.form["jugador"]
         titulo = request.form["titulo"]
 
-        conn = sqlite3.connect("database.db")
+        conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
 
         c.execute("SELECT id FROM jugadores WHERE nombre = ?", (jugador,))
@@ -338,7 +342,7 @@ def admin_jugadores():
 
 @app.route("/admin/jugadores/<int:jugador_id>")
 def admin_jugador_detalle(jugador_id):
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
@@ -375,7 +379,7 @@ def admin_clubes():
 
 @app.route("/admin/clubes/editar/<int:club_id>", methods=["GET", "POST"])
 def editar_club(club_id):
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
@@ -399,7 +403,7 @@ def editar_club(club_id):
 
 @app.route("/admin/clubes/borrar/<int:club_id>")
 def borrar_club(club_id):
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     # borrar relaciones primero
@@ -420,7 +424,7 @@ def autocomplete_selecciones():
     if not q:
         return jsonify([])
 
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("""
         SELECT DISTINCT nacionalidad
