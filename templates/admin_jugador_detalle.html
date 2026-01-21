@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>{{ jugador.nombre }}</h2>
+<p><strong>Nacionalidad:</strong> {{ jugador.nacionalidad }}</p>
+
+<p>
+    <a href="/admin/jugadores/editar/{{ jugador.id }}">✏️ Editar jugador</a> |
+    <a href="/admin/jugadores/borrar/{{ jugador.id }}"
+       onclick="return confirm('¿Seguro que quieres borrar este jugador?');">
+       🗑️ Borrar jugador
+    </a>
+</p>
+
+<hr>
+
+<h3>Clubes / Historial</h3>
+
+<table border="1" cellpadding="6">
+    <tr>
+        <th>Club</th>
+        <th>Inicio</th>
+        <th>Fin</th>
+        <th>Acciones</th>
+    </tr>
+
+    {% for h in historial %}
+    <tr>
+        <td>{{ h.club }}</td>
+        <td>{{ h.inicio }}</td>
+        <td>{{ h.fin }}</td>
+        <td>
+            <a href="/admin/historial/editar/{{ h.id }}">✏️</a>
+            |
+            <a href="/admin/historial/borrar/{{ h.id }}"
+               onclick="return confirm('¿Borrar este historial?');">
+               🗑️
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<p>
+    <a href="/historial_jugador">➕ Añadir club a este jugador</a>
+</p>
+
+{% endblock %}
