@@ -75,6 +75,7 @@ def index():
     resultados = []
 
     if request.method == "POST":
+        # checkboxes
         f_nacionalidad = request.form.get("f_nacionalidad")
         f_club = request.form.get("f_club")
         f_liga = request.form.get("f_liga")
@@ -82,6 +83,7 @@ def index():
         f_entrenador = request.form.get("f_entrenador")
         f_titulo = request.form.get("f_titulo")
 
+        # valores
         nacionalidad = request.form.get("nacionalidad")
         club = request.form.get("club")
         liga = request.form.get("liga")
@@ -90,10 +92,18 @@ def index():
         titulo = request.form.get("titulo")
 
         params = []
+
         necesita_historial = f_club or f_liga or f_companero or f_entrenador
 
+        # =====================================================
+        # CASO 1: filtros SIN historial
+        # =====================================================
         if not necesita_historial:
-            query = "SELECT DISTINCT j.id, j.nombre FROM jugadores j WHERE 1=1"
+            query = """
+            SELECT DISTINCT j.id, j.nombre
+            FROM jugadores j
+            WHERE 1=1
+            """
 
             if f_nacionalidad and nacionalidad:
                 query += " AND j.nacionalidad = ?"
@@ -102,12 +112,18 @@ def index():
             if f_titulo and titulo:
                 query += """
                 AND EXISTS (
-                    SELECT 1 FROM titulos_jugador tj
+                    SELECT 1
+                    FROM titulos_jugador tj
                     JOIN titulos t ON tj.titulo_id = t.id
-                    WHERE tj.jugador_id = j.id AND t.nombre = ?
+                    WHERE tj.jugador_id = j.id
+                      AND t.nombre = ?
                 )
                 """
                 params.append(titulo)
+
+        # =====================================================
+        # CASO 2: filtros CON historial (AQUÍ ESTÁ LA CLAVE)
+        # =====================================================
         else:
             query = """
             SELECT DISTINCT j.id, j.nombre
@@ -121,14 +137,26 @@ def index():
                 query += " AND c.nombre = ?"
                 params.append(club)
 
+            # 🔥 FILTRO DE LIGA HISTÓRICO CORRECTO
             if f_liga and liga:
-                query += " AND c.liga = ?"
+                query += """
+                AND EXISTS (
+                    SELECT 1
+                    FROM club_liga_temporada clt
+                    JOIN temporadas t ON clt.temporada_id = t.id
+                    WHERE clt.club_id = c.id
+                      AND clt.liga = ?
+                      AND hj.inicio <= t.nombre
+                      AND hj.fin >= t.nombre
+                )
+                """
                 params.append(liga)
 
             if f_companero and companero:
                 query += """
                 AND EXISTS (
-                    SELECT 1 FROM historial_jugador hj2
+                    SELECT 1
+                    FROM historial_jugador hj2
                     JOIN jugadores j2 ON hj2.jugador_id = j2.id
                     WHERE j2.nombre = ?
                       AND hj2.club_id = hj.club_id
@@ -141,7 +169,8 @@ def index():
             if f_entrenador and entrenador:
                 query += """
                 AND EXISTS (
-                    SELECT 1 FROM historial_entrenador he
+                    SELECT 1
+                    FROM historial_entrenador he
                     JOIN entrenadores e ON he.entrenador_id = e.id
                     WHERE he.club_id = hj.club_id
                       AND e.nombre = ?
@@ -158,9 +187,11 @@ def index():
             if f_titulo and titulo:
                 query += """
                 AND EXISTS (
-                    SELECT 1 FROM titulos_jugador tj
+                    SELECT 1
+                    FROM titulos_jugador tj
                     JOIN titulos t ON tj.titulo_id = t.id
-                    WHERE tj.jugador_id = j.id AND t.nombre = ?
+                    WHERE tj.jugador_id = j.id
+                      AND t.nombre = ?
                 )
                 """
                 params.append(titulo)
@@ -168,9 +199,12 @@ def index():
         resultados = query_db(query, params)
 
     entrenadores = query_db("SELECT nombre FROM entrenadores ORDER BY nombre")
-    ligas = query_db("SELECT DISTINCT liga FROM clubes ORDER BY liga")
+    ligas = query_db("""
+        SELECT DISTINCT liga
+        FROM club_liga_temporada
+        ORDER BY liga
+    """)
     titulos = query_db("SELECT nombre FROM titulos ORDER BY nombre")
-
 
     return render_template(
         "index.html",
@@ -179,7 +213,6 @@ def index():
         ligas=ligas,
         titulos=titulos
     )
-
 
 
 
@@ -213,9 +246,10 @@ def add_data():
             )
         elif tipo == "club":
             c.execute(
-                "INSERT OR IGNORE INTO clubes (nombre, liga) VALUES (?, ?)",
-                (nombre, extra)
+                "INSERT OR IGNORE INTO clubes (nombre) VALUES (?)",
+                (nombre,)
             )
+
         elif tipo == "titulo":
             c.execute(
                 "INSERT OR IGNORE INTO titulos (nombre, tipo) VALUES (?, '')",
@@ -437,6 +471,73 @@ def autocomplete_selecciones():
     conn.close()
     return jsonify(resultados)
 
+@app.route("/admin/temporadas", methods=["GET", "POST"])
+def admin_temporadas():
+    if not session.get("admin"):
+        return redirect("/login")
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+
+    if request.method == "POST":
+        nombre = request.form["nombre"]
+        if nombre:
+            c.execute(
+                "INSERT OR IGNORE INTO temporadas (nombre) VALUES (?)",
+                (nombre,)
+            )
+            conn.commit()
+
+    temporadas = c.execute(
+        "SELECT * FROM temporadas ORDER BY nombre"
+    ).fetchall()
+
+    conn.close()
+
+    return render_template("admin_temporadas.html", temporadas=temporadas)
+
+@app.route("/admin/club_liga_temporada", methods=["GET", "POST"])
+def club_liga_temporada():
+    if not session.get("admin"):
+        return redirect("/login")
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+
+    if request.method == "POST":
+        club_id = request.form["club_id"]
+        temporada_id = request.form["temporada_id"]
+        liga = request.form["liga"]
+
+        c.execute("""
+            INSERT OR REPLACE INTO club_liga_temporada
+            (club_id, temporada_id, liga)
+            VALUES (?, ?, ?)
+        """, (club_id, temporada_id, liga))
+        conn.commit()
+
+    clubes = c.execute("SELECT id, nombre FROM clubes ORDER BY nombre").fetchall()
+    temporadas = c.execute("SELECT id, nombre FROM temporadas ORDER BY nombre").fetchall()
+
+    relaciones = c.execute("""
+        SELECT c.nombre AS club, t.nombre AS temporada, clt.liga
+        FROM club_liga_temporada clt
+        JOIN clubes c ON clt.club_id = c.id
+        JOIN temporadas t ON clt.temporada_id = t.id
+        ORDER BY t.nombre, c.nombre
+    """).fetchall()
+
+    conn.close()
+
+    return render_template(
+        "admin_club_liga_temporada.html",
+        clubes=clubes,
+        temporadas=temporadas,
+        relaciones=relaciones
+    )
+
 
 # ===========================
 # ARRANQUE
@@ -464,5 +565,3 @@ def login():
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
