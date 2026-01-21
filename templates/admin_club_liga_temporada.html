@@ -1,58 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>Asignar club a liga por temporada</h2>
+<h2>Club · Liga · Temporada</h2>
 
 <form method="POST">
+    <select name="club_id" required>
+        {% for c in clubes %}
+            <option value="{{ c.id }}">{{ c.nombre }}</option>
+        {% endfor %}
+    </select>
 
-    <p>
-        <label>Club</label><br>
-        <select name="club_id" required>
-            {% for c in clubes %}
-                <option value="{{ c.id }}">{{ c.nombre }}</option>
-            {% endfor %}
-        </select>
-    </p>
+    <select name="temporada_id" required>
+        {% for t in temporadas %}
+            <option value="{{ t.id }}">{{ t.nombre }}</option>
+        {% endfor %}
+    </select>
 
-    <p>
-        <label>Liga</label><br>
-        <select name="liga_id" required>
-            {% for l in ligas %}
-                <option value="{{ l.id }}">{{ l.nombre }}</option>
-            {% endfor %}
-        </select>
-    </p>
+    <input type="text" name="liga" placeholder="Ej: LaLiga" required>
 
-    <p>
-        <label>Temporada</label><br>
-        <select name="temporada_id" required>
-            {% for t in temporadas %}
-                <option value="{{ t.id }}">{{ t.nombre }}</option>
-            {% endfor %}
-        </select>
-    </p>
-
-    <button type="submit">Asignar</button>
+    <button type="submit">Guardar</button>
 </form>
 
 <hr>
-
-<h3>Asignaciones existentes</h3>
-
-<table border="1" cellpadding="6">
-    <tr>
-        <th>Club</th>
-        <th>Liga</th>
-        <th>Temporada</th>
-    </tr>
-
-    {% for a in asignaciones %}
-    <tr>
-        <td>{{ a.club }}</td>
-        <td>{{ a.liga }}</td>
-        <td>{{ a.temporada }}</td>
-    </tr>
-    {% endfor %}
-</table>
-
-{% endblock %}
