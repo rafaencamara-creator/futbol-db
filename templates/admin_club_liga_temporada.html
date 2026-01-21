@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Club · Liga · Temporada</h2>
+
+<form method="POST">
+    <select name="club_id" required>
+        {% for c in clubes %}
+            <option value="{{ c.id }}">{{ c.nombre }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="temporada_id" required>
+        {% for t in temporadas %}
+            <option value="{{ t.id }}">{{ t.nombre }}</option>
+        {% endfor %}
+    </select>
+
+    <input type="text" name="liga" placeholder="Ej: LaLiga" required>
+
+    <button type="submit">Guardar</button>
+</form>
+
+<hr>
+
+<ul>
+{% for r in relaciones %}
+    <li>{{ r.club }} — {{ r.temporada }} → {{ r.liga }}</li>
+{% endfor %}
+</ul>
+
+{% endblock %}
+

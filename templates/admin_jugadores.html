@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Jugadores</h2>
+
+<table border="1" cellpadding="6">
+    <tr>
+        <th>Nombre</th>
+        <th>Nacionalidad</th>
+        <th>Acciones</th>
+    </tr>
+
+    {% for j in jugadores %}
+    <tr>
+        <td>{{ j.nombre }}</td>
+        <td>{{ j.nacionalidad }}</td>
+        <td>
+            <a href="/admin/jugadores/{{ j.id }}">👁 Ver / editar</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}
