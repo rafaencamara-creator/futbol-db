@@ -1,21 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>Administrar temporadas</h2>
+<h2>Temporadas</h2>
 
 <form method="POST">
     <input type="text" name="nombre" placeholder="Ej: 2003-2004" required>
-    <button type="submit">Añadir temporada</button>
+    <button type="submit">Añadir</button>
 </form>
 
 <hr>
 
-<h3>Temporadas existentes</h3>
-
 <ul>
-    {% for t in temporadas %}
-        <li>{{ t.nombre }}</li>
-    {% endfor %}
+{% for t in temporadas %}
+    <li>{{ t.nombre }}</li>
+{% endfor %}
 </ul>
 
 {% endblock %}
