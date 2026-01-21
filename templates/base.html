@@ -3,34 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <title>Fútbol DB</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-<h1>Fútbol DB</h1>
+<nav style="margin-bottom:20px;">
+    <a href="/">🔍 Buscar</a> |
 
-<nav>
-    <a href="/">Buscar</a> |
-    <a href="/add">Añadir datos</a> |
-    <a href="/historial_jugador">Historial jugador</a> |
-    <a href="/historial_entrenador">Historial entrenador</a> |
-    <a href="/titulo_jugador">Títulos jugador</a> |
-    <a href="/admin/jugadores">Jugadores</a> |
-    <a href="/admin/clubes">Clubes</a>
-    <a href="/admin/temporadas">Temporadas</a> |
-    <a href="/admin/club_liga_temporada">Club · Liga · Temporada</a> |
+    {% if session.get("admin") %}
+        <a href="/add">➕ Añadir datos</a> |
+        <a href="/historial_jugador">📅 Historial jugador</a> |
+        <a href="/historial_entrenador">🎓 Historial entrenador</a> |
+        <a href="/titulo_jugador">🏆 Títulos jugador</a> |
+        <a href="/admin/jugadores">👤 Jugadores</a> |
+        <a href="/admin/clubes">🏟️ Clubes</a> |
+        <a href="/admin/temporadas">🗓️ Temporadas</a> |
+        <a href="/admin/club_liga_temporada">🔗 Club · Liga · Temporada</a> |
+        <a href="/login">🚪 Logout</a>
+    {% else %}
+        <a href="/login">🔐 Login admin</a>
+    {% endif %}
 </nav>
-
-
-
 
 <hr>
 
-{% block content %}
-{% endblock %}
-
-<script src="{{ url_for('static', filename='autocomplete.js') }}"></script>
-
-
-</body>
-</html>
