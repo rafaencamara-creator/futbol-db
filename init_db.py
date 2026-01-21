@@ -1,75 +1,123 @@
 import sqlite3
+import os
 
-# Conecta a la base de datos (se crea automáticamente)
-conn = sqlite3.connect("database.db")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "database.db")
+
+conn = sqlite3.connect(DB_PATH)
 c = conn.cursor()
 
-# Tabla de jugadores
+# =========================
+# JUGADORES
+# =========================
 c.execute("""
-CREATE TABLE jugadores (
+CREATE TABLE IF NOT EXISTS jugadores (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT UNIQUE,
+    nombre TEXT UNIQUE NOT NULL,
     nacionalidad TEXT
 )
 """)
 
-# Tabla de clubes
+# =========================
+# CLUBES
+# =========================
 c.execute("""
-CREATE TABLE clubes (
+CREATE TABLE IF NOT EXISTS clubes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT UNIQUE,
-    liga TEXT
+    nombre TEXT UNIQUE NOT NULL
 )
 """)
 
-# Tabla de entrenadores
+# =========================
+# ENTRENADORES
+# =========================
 c.execute("""
-CREATE TABLE entrenadores (
+CREATE TABLE IF NOT EXISTS entrenadores (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT UNIQUE,
+    nombre TEXT UNIQUE NOT NULL,
     nacionalidad TEXT
 )
 """)
 
-# Historial de jugadores en clubes
+# =========================
+# TITULOS
+# =========================
 c.execute("""
-CREATE TABLE historial_jugador (
-    jugador_id INTEGER,
-    club_id INTEGER,
-    inicio INTEGER,
-    fin INTEGER
-)
-""")
-
-# Historial de entrenadores en clubes
-c.execute("""
-CREATE TABLE historial_entrenador (
-    entrenador_id INTEGER,
-    club_id INTEGER,
-    inicio INTEGER,
-    fin INTEGER
-)
-""")
-
-# Títulos (colectivos o individuales)
-c.execute("""
-CREATE TABLE titulos (
+CREATE TABLE IF NOT EXISTS titulos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT,
+    nombre TEXT UNIQUE NOT NULL,
     tipo TEXT
 )
 """)
 
-# Relación jugador-título
+# =========================
+# TEMPORADAS
+# =========================
 c.execute("""
-CREATE TABLE titulos_jugador (
-    jugador_id INTEGER,
-    titulo_id INTEGER
+CREATE TABLE IF NOT EXISTS temporadas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT UNIQUE NOT NULL
 )
 """)
 
-# Guardar cambios y cerrar conexión
+# =========================
+# HISTORIAL JUGADOR
+# =========================
+c.execute("""
+CREATE TABLE IF NOT EXISTS historial_jugador (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    jugador_id INTEGER NOT NULL,
+    club_id INTEGER NOT NULL,
+    inicio TEXT,
+    fin TEXT,
+    FOREIGN KEY (jugador_id) REFERENCES jugadores(id),
+    FOREIGN KEY (club_id) REFERENCES clubes(id)
+)
+""")
+
+# =========================
+# HISTORIAL ENTRENADOR
+# =========================
+c.execute("""
+CREATE TABLE IF NOT EXISTS historial_entrenador (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entrenador_id INTEGER NOT NULL,
+    club_id INTEGER NOT NULL,
+    inicio TEXT,
+    fin TEXT,
+    FOREIGN KEY (entrenador_id) REFERENCES entrenadores(id),
+    FOREIGN KEY (club_id) REFERENCES clubes(id)
+)
+""")
+
+# =========================
+# TITULOS JUGADOR
+# =========================
+c.execute("""
+CREATE TABLE IF NOT EXISTS titulos_jugador (
+    jugador_id INTEGER NOT NULL,
+    titulo_id INTEGER NOT NULL,
+    PRIMARY KEY (jugador_id, titulo_id),
+    FOREIGN KEY (jugador_id) REFERENCES jugadores(id),
+    FOREIGN KEY (titulo_id) REFERENCES titulos(id)
+)
+""")
+
+# =========================
+# CLUB - LIGA - TEMPORADA
+# =========================
+c.execute("""
+CREATE TABLE IF NOT EXISTS club_liga_temporada (
+    club_id INTEGER NOT NULL,
+    temporada_id INTEGER NOT NULL,
+    liga TEXT NOT NULL,
+    PRIMARY KEY (club_id, temporada_id),
+    FOREIGN KEY (club_id) REFERENCES clubes(id),
+    FOREIGN KEY (temporada_id) REFERENCES temporadas(id)
+)
+""")
+
 conn.commit()
 conn.close()
 
-print("Base de datos creada")
+print("Base de datos creada correctamente.")
