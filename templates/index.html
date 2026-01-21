@@ -41,10 +41,10 @@
             <input type="checkbox" name="f_liga">
             Jugó en liga
         </label><br>
-        <select name="liga" id="liga">
+       <select name="liga" id="liga">
     <option value="">-- Selecciona liga --</option>
     {% for l in ligas %}
-        <option value="{{ l.id }}">{{ l.nombre }}</option>
+        <option value="{{ l.liga }}">{{ l.liga }}</option>
     {% endfor %}
 </select>
 

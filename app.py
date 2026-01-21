@@ -10,56 +10,6 @@ app = Flask(__name__)
 app.secret_key = "#Mickybite18Ngolonigger47pickcotton"
 
 # ===========================
-# ADMIN CLUB + LIGA + TEMPORADA
-# ===========================
-@app.route("/admin/club_liga_temporada", methods=["GET", "POST"])
-def admin_club_liga_temporada():
-    if not session.get("admin"):
-        return redirect("/login")
-
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-
-    if request.method == "POST":
-        club_id = request.form["club_id"]
-        liga_id = request.form["liga_id"]
-        temporada_id = request.form["temporada_id"]
-
-        c.execute("""
-            INSERT INTO club_liga_temporada (club_id, liga_id, temporada_id)
-            VALUES (?, ?, ?)
-        """, (club_id, liga_id, temporada_id))
-
-        conn.commit()
-
-    clubes = c.execute("SELECT id, nombre FROM clubes ORDER BY nombre").fetchall()
-    ligas = c.execute("SELECT id, nombre FROM ligas ORDER BY nombre").fetchall()
-    temporadas = c.execute("SELECT id, nombre FROM temporadas ORDER BY nombre").fetchall()
-
-    asignaciones = c.execute("""
-        SELECT
-            c.nombre AS club,
-            l.nombre AS liga,
-            t.nombre AS temporada
-        FROM club_liga_temporada clt
-        JOIN clubes c ON clt.club_id = c.id
-        JOIN ligas l ON clt.liga_id = l.id
-        JOIN temporadas t ON clt.temporada_id = t.id
-        ORDER BY t.nombre, c.nombre
-    """).fetchall()
-
-    conn.close()
-
-    return render_template(
-        "admin_club_liga_temporada.html",
-        clubes=clubes,
-        ligas=ligas,
-        temporadas=temporadas,
-        asignaciones=asignaciones
-    )
-
-# ===========================
 # UTILIDAD DB
 # ===========================
 def query_db(query, params=()):
@@ -164,9 +114,6 @@ def index():
             FROM jugadores j
             JOIN historial_jugador hj ON j.id = hj.jugador_id
             JOIN clubes c ON hj.club_id = c.id
-            JOIN club_liga_temporada clt
-            ON hj.club_id = clt.club_id
-            AND hj.temporada_id = clt.temporada_id
             WHERE 1=1
             """
 
@@ -175,9 +122,8 @@ def index():
                 params.append(club)
 
             if f_liga and liga:
-                query += " AND clt.liga_id = ?"
+                query += " AND c.liga = ?"
                 params.append(liga)
-
 
             if f_companero and companero:
                 query += """
@@ -222,7 +168,7 @@ def index():
         resultados = query_db(query, params)
 
     entrenadores = query_db("SELECT nombre FROM entrenadores ORDER BY nombre")
-    ligas = query_db("SELECT id, nombre FROM ligas ORDER BY nombre")
+    ligas = query_db("SELECT DISTINCT liga FROM clubes ORDER BY liga")
     titulos = query_db("SELECT nombre FROM titulos ORDER BY nombre")
 
 
@@ -296,46 +242,24 @@ def historial_jugador():
         inicio = request.form["inicio"]
         fin = request.form["fin"]
 
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect("database.db")
         c = conn.cursor()
 
         c.execute("SELECT id FROM jugadores WHERE nombre = ?", (jugador,))
         j = c.fetchone()
-
         c.execute("SELECT id FROM clubes WHERE nombre = ?", (club,))
         cl = c.fetchone()
 
         if j and cl:
-            # obtener o crear temporada "desconocida"
             c.execute(
-                "SELECT id FROM temporadas WHERE nombre = ?",
-                ("desconocida",)
-            )
-            row = c.fetchone()
-
-            if row:
-                temporada_id = row[0]
-            else:
-                c.execute(
-                    "INSERT INTO temporadas (nombre) VALUES (?)",
-                    ("desconocida",)
-                )
-                temporada_id = c.lastrowid
-
-            c.execute(
-                """
-                INSERT INTO historial_jugador
-                (jugador_id, club_id, temporada_id, inicio, fin)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (j[0], cl[0], temporada_id, inicio, fin)
+                "INSERT INTO historial_jugador (jugador_id, club_id, inicio, fin) VALUES (?, ?, ?, ?)",
+                (j[0], cl[0], inicio, fin)
             )
 
         conn.commit()
         conn.close()
 
     return render_template("add_historial_jugador.html")
-
 
 
 # ===========================
@@ -512,39 +436,6 @@ def autocomplete_selecciones():
     resultados = [r[0] for r in c.fetchall()]
     conn.close()
     return jsonify(resultados)
-
-# ===========================
-# ADMIN TEMPORADAS
-# ===========================
-@app.route("/admin/temporadas", methods=["GET", "POST"])
-def admin_temporadas():
-    if not session.get("admin"):
-        return redirect("/login")
-
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-
-    if request.method == "POST":
-        nombre = request.form["nombre"]
-        if nombre:
-            c.execute(
-                "INSERT OR IGNORE INTO temporadas (nombre) VALUES (?)",
-                (nombre,)
-            )
-            conn.commit()
-
-    temporadas = c.execute(
-        "SELECT id, nombre FROM temporadas ORDER BY nombre"
-    ).fetchall()
-
-    conn.close()
-
-    return render_template(
-        "admin_temporadas.html",
-        temporadas=temporadas
-    )
-
 
 
 # ===========================
